@@ -24,11 +24,11 @@ A Java Servlet + JSP web application that lets cavers log and manage their cavin
 
 | Layer      | Technology                                                        |
 |------------|-------------------------------------------------------------------|
-| Language   | Java 8                                                             |
-| Web        | Java Servlets (javax.servlet 3.0.1), JSP                          |
+| Language   | Java 17 (sources remain Java 8 compatible)                        |
+| Web        | Java Servlets (javax.servlet 4.0.1 on Tomcat 9), JSP              |
 | Build      | Maven (packaged as a WAR)                                          |
 | Database   | PostgreSQL                                                         |
-| Conn. pool | JNDI `DataSource` (`jdbc/dbcp`) via `org.nfis:db` connection manager |
+| Conn. pool | JNDI `DataSource` (`jdbc/dbcp`) via Tomcat DBCP                   |
 | Logging    | tinylog 2.3.2                                                      |
 | Testing    | JUnit 5 (Jupiter), Mockito                                          |
 
@@ -40,8 +40,12 @@ A Java Servlet + JSP web application that lets cavers log and manage their cavin
 Caving-log/
 ├── README.md
 ├── .gitignore
+├── scripts/                               # setup / start / stop
+│   ├── setup.sh
+│   ├── start.sh
+│   └── stop.sh
 └── webApp/                              # Maven WAR module
-    ├── pom.xml                          # Build config (warName: "simple", Java 1.8)
+    ├── pom.xml                          # Build config (warName: "simple")
     ├── WebContent/                      # WAR source root (frontend + config)
     │   ├── META-INF/
     │   │   ├── MANIFEST.MF
@@ -88,14 +92,35 @@ Caving-log/
 - **Apache Tomcat 9** (or run `scripts/setup.sh`)
 - A **PostgreSQL** server (or run `scripts/setup.sh`, which creates a local `caving` database on port 5432)
 
-### 1. Set up the database
+### Quick start on this machine (recommended)
+
+```bash
+cd Caving-log
+./scripts/setup.sh   # downloads Maven + Tomcat, creates the local DB and loads the schema
+./scripts/start.sh   # builds, deploys to Tomcat, and starts the server
+# open http://localhost:8080/simple/ in Firefox
+./scripts/stop.sh    # stop Tomcat when done
+```
+
+### What the scripts do
+
+- `scripts/setup.sh` — downloads Maven 3.9.16 and Tomcat 9.0.124 into `.tools/`, creates the `caving` PostgreSQL role/database on port 5432, and loads `webApp/database/sql/base-ddl.sql`.
+- `scripts/start.sh` — runs `mvn package`, deploys `webApp/target/simple.war` to Tomcat, and starts the server.
+- `scripts/stop.sh` — stops Tomcat.
+
+### Verify it's working in Firefox
+
+1. Open **Firefox**.
+2. Go to: `http://localhost:8080/simple/`
+3. You should see the *Register New Caver* form.
+4. Register a caver, click *Back to Cavers* to see the list, then *View Trips* to manage trips.
+
+### 1. Set up the database manually (without scripts)
 
 Run the SQL scripts in order against your PostgreSQL database:
 
 1. `webApp/database/sql/base-ddl.sql` — drops and recreates the `cavers` and `trips` tables and inserts sample data.
 2. `webApp/database/sql/base-data.sql` — (optional) inserts additional sample rows.
-
-If you only want the schema with a fresh start, `base-ddl.sql` already includes seed data.
 
 The app connects through a JNDI data source named `jdbc/dbcp`, configured in `webApp/WebContent/META-INF/context.xml`. It currently points at a local dev database:
 
@@ -120,7 +145,7 @@ mvn package
 
 This produces `webApp/target/simple.war` (the `warName` is `simple` per `pom.xml`).
 
-### 3. Deploy
+### 3. Deploy and run
 
 Deploy `simple.war` to your Tomcat `webapps` directory (or use the Tomcat Manager). The app should then be available at:
 
@@ -130,17 +155,34 @@ http://localhost:8080/simple/
 
 `web.xml` sets the welcome page to `registration.jsp`, so the root URL opens the *Register New Caver* form.
 
-### Quick start on this machine
+### Check your database
+
+This machine runs **PostgreSQL 16** on port `5432`. The app uses a database named `caving` with user `caving` / password `caving`.
 
 ```bash
-cd Caving-log
-./scripts/setup.sh   # downloads Maven + Tomcat, creates the local DB and loads the schema
-./scripts/start.sh   # builds, deploys to Tomcat, and starts the server
-# open http://localhost:8080/simple/
-./scripts/stop.sh    # stop Tomcat when done
+# List databases
+psql -d postgres -c "\l"
+
+# Connect to the app database
+psql -h localhost -U caving -d caving
+
+# Inside psql:
+\dt              # list tables
+SELECT * FROM cavers;
+SELECT * FROM trips;
+\q               # quit
 ```
 
-Tests:
+Quick counts without staying connected:
+
+```bash
+PGPASSWORD=caving psql -h localhost -U caving -d caving -c "SELECT count(*) FROM cavers;"
+PGPASSWORD=caving psql -h localhost -U caving -d caving -c "SELECT count(*) FROM trips;"
+```
+
+The dev database credentials are: user `caving`, password `caving`, database `caving`, host `localhost`, port `5432`.
+
+### Running the tests
 
 ```bash
 cd Caving-log/webApp
@@ -239,5 +281,4 @@ The test suite covers:
 - **No rescue / emergency feature** — the "call for rescue" behaviour from the original description is not implemented. The `status` field on a caver is free text and could be used to indicate safety, but nothing automated reads it.
 - **No authentication** — anyone can add, update, or delete cavers and trips.
 - **`search_bar_trips.js` is not wired up** — `view_trips.jsp` doesn't include a search box or the script, so trips can't be filtered client-side.
-- **Minor pre-fill bug** — `read_handler.jsp` passes the caver status as `previous_Status`, but `update_caver.jsp` reads `previous_status`, so the status field isn't pre-filled when editing a caver.
 - **DB credentials are hardcoded** in `WebContent/META-INF/context.xml` (see [Setup](#1-set-up-the-database)).
