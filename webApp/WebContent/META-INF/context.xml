@@ -1,25 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE xml>
 <Context>
    <Resource name="jdbc/dbcp" auth="Container"
-       type="javax.sql.DataSource" 
-       username="gmaryshev" password="forestbrewless"
+       type="javax.sql.DataSource"
+       username="caving" password="caving"
        driverClassName="org.postgresql.Driver"
-       url="jdbc:postgresql://xpgdev1.nfis.org:5432/sandbox" 
+       url="jdbc:postgresql://localhost:5432/caving"
        maxActive="15"
-       maxIdle="10"    
-       validationQuery = "SELECT * FROM cavers" /> 
-	<parameter>
-		<name>removeAbandoned</name>
-		<value>true</value>
-	</parameter>
-	<parameter>
-		<name>removeAbandonedTimeout</name>
-		<value>60</value>
-	</parameter>
-	<parameter>
-		<name>logAbandoned</name>
-		<value>true</value>
-	</parameter>
-   
+       maxIdle="10"
+       validationQuery="SELECT 1"
+       removeAbandoned="true"
+       removeAbandonedTimeout="60"
+       logAbandoned="true" />
 </Context>

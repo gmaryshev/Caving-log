@@ -83,10 +83,10 @@ Caving-log/
 
 ### Prerequisites
 
-- **Java 8** JDK
-- **Maven 3.x**
-- **Apache Tomcat** (7+ to match `javax.servlet` 3.0)
-- A **PostgreSQL** database server
+- **Java 17** JDK (the app sources remain Java 8 compatible)
+- **Maven 3.x** (or run `scripts/setup.sh`, which downloads Maven/Tomcat for you)
+- **Apache Tomcat 9** (or run `scripts/setup.sh`)
+- A **PostgreSQL** server (or run `scripts/setup.sh`, which creates a local `caving` database on port 5432)
 
 ### 1. Set up the database
 
@@ -97,19 +97,19 @@ Run the SQL scripts in order against your PostgreSQL database:
 
 If you only want the schema with a fresh start, `base-ddl.sql` already includes seed data.
 
-The app connects through a JNDI data source named `jdbc/dbcp`, configured in `webApp/WebContent/META-INF/context.xml`. Point it at your database before deploying:
+The app connects through a JNDI data source named `jdbc/dbcp`, configured in `webApp/WebContent/META-INF/context.xml`. It currently points at a local dev database:
 
 ```xml
 <Resource name="jdbc/dbcp" auth="Container"
     type="javax.sql.DataSource"
-    username="YOUR_USER" password="YOUR_PASSWORD"
+    username="caving" password="caving"
     driverClassName="org.postgresql.Driver"
-    url="jdbc:postgresql://HOST:5432/YOUR_DATABASE"
+    url="jdbc:postgresql://localhost:5432/caving"
     maxActive="15" maxIdle="10"
-    validationQuery="SELECT * FROM cavers" />
+    validationQuery="SELECT 1" />
 ```
 
-> ⚠️ The repo currently contains **hardcoded database credentials** in `context.xml`. This is fine for a sandbox, but replace them (or externalize them) before any real deployment.
+> ⚠️ `context.xml` contains **hardcoded dev credentials**. Replace them before any real deployment.
 
 ### 2. Build the WAR
 
@@ -129,6 +129,23 @@ http://localhost:8080/simple/
 ```
 
 `web.xml` sets the welcome page to `registration.jsp`, so the root URL opens the *Register New Caver* form.
+
+### Quick start on this machine
+
+```bash
+cd Caving-log
+./scripts/setup.sh   # downloads Maven + Tomcat, creates the local DB and loads the schema
+./scripts/start.sh   # builds, deploys to Tomcat, and starts the server
+# open http://localhost:8080/simple/
+./scripts/stop.sh    # stop Tomcat when done
+```
+
+Tests:
+
+```bash
+cd Caving-log/webApp
+mvn test
+```
 
 ---
 
