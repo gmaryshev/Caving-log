@@ -44,7 +44,7 @@ public class DaoFile {
 	/**
 	 * attempts to get a connection from the dataSource
 	 */
-	void testConnection() {
+	void testConnection() throws SQLException {
 		if(dataSource != null) {
 			Connection connection = null;
 			try {
@@ -104,7 +104,7 @@ public class DaoFile {
 	 * @param maxTripLength to be put in the preparedstament  
 	 * @throws SQLexception if caver could not be added
 	 */
-	void addTrip(int caverId, String caveName, Timestamp startTime, Timestamp endTime, int groupSize, double maxTripLength) {
+	void addTrip(int caverId, String caveName, Timestamp startTime, Timestamp endTime, int groupSize, double maxTripLength) throws SQLException {
 		String INSERT_TRIP = "INSERT INTO trips (caver_id, cave_name, start_time, end_time, group_size, max_trip_length) VALUES (?, ?, ?, ?, ?, ?)";
 		try (Connection connection = dataSource.getConnection();
 				PreparedStatement ps = connection.prepareStatement(INSERT_TRIP)) {
@@ -125,7 +125,7 @@ public class DaoFile {
 	 * reads cavers from cavers table in the db
 	 * @return List<Caver> 
 	 */
-	List<Caver> getCavers() {
+	List<Caver> getCavers() throws SQLException {
 		String SELECT_CAVERS = "SELECT * FROM cavers";
 		List<Caver> cavers = new ArrayList<>();
 		try (Connection connection = dataSource.getConnection();
@@ -147,7 +147,7 @@ public class DaoFile {
 	 * reads trips from the trips table in the db
 	 * @return List<Trip> 
 	 */
-	List<Trip> getTrips() {
+	List<Trip> getTrips() throws SQLException {
 		String SELECT_TRIPS = "SELECT * FROM trips";
 		List<Trip> trips = new ArrayList<>();
 		try (Connection connection = dataSource.getConnection();
@@ -199,7 +199,7 @@ public class DaoFile {
 	 * @param maxTripLength to be put in the preparedstament  
 	 * @throws SQLexception if caver could not be added
 	 */
-	void updateTrip(int tripId, String caveName, Timestamp startTime, Timestamp endTime, int groupSize, double maxTripLength) {
+	void updateTrip(int tripId, String caveName, Timestamp startTime, Timestamp endTime, int groupSize, double maxTripLength) throws SQLException {
 		String UPDATE_TRIP = "UPDATE trips SET cave_name = ?, start_time = ?, end_time = ?, group_size = ?, max_trip_length = ? WHERE trip_id = ?";
 		try (Connection connection = dataSource.getConnection();
 				PreparedStatement ps = connection.prepareStatement(UPDATE_TRIP)) {
@@ -221,7 +221,7 @@ public class DaoFile {
 	 *
 	 * @param caverId to be put in the preparedstament 
 	 */
-	void deleteCaver(int caverId) {
+	void deleteCaver(int caverId) throws SQLException {
 		String DELETE_CAVER = "DELETE FROM cavers WHERE caver_id = ?";
 		try (Connection connection = dataSource.getConnection();
 				PreparedStatement ps = connection.prepareStatement(DELETE_CAVER)) {
@@ -237,7 +237,7 @@ public class DaoFile {
 	 *
 	 * @param tripId to be put in the preparedstament 
 	 */
-	void deleteTrip(int tripId) {
+	void deleteTrip(int tripId) throws SQLException {
 		String DELETE_TRIP = "DELETE FROM trips WHERE trip_id = ?";
 		try (Connection connection = dataSource.getConnection();
 				PreparedStatement ps = connection.prepareStatement(DELETE_TRIP)) {
